@@ -1,0 +1,134 @@
+{
+  "carro": {
+    "nombre": "Nissan Versa 1.6",
+    "rendimiento_km_l": 16.0
+  },
+  "precio_gasolina_mxn_l": 24.0,
+  "velocidad_prom_kmh": 85.0,
+  "factor_peaje_mxn_km": 0.85,
+  "valores_hora": [
+    100,
+    200,
+    300
+  ],
+  "vh_base": 200,
+  "costo_por_km_base": 4.703,
+  "tabla": [
+    {
+      "metodo": "GA",
+      "valor_hora": 100,
+      "costo_total_mxn": 34693.48,
+      "distancia_total_km": 9838.0,
+      "costo_prom_km_mxn": 3.526
+    },
+    {
+      "metodo": "ACO",
+      "valor_hora": 100,
+      "costo_total_mxn": 32357.26,
+      "distancia_total_km": 9175.5,
+      "costo_prom_km_mxn": 3.526
+    },
+    {
+      "metodo": "GA",
+      "valor_hora": 200,
+      "costo_total_mxn": 50601.87,
+      "distancia_total_km": 10759.6,
+      "costo_prom_km_mxn": 4.703
+    },
+    {
+      "metodo": "ACO",
+      "valor_hora": 200,
+      "costo_total_mxn": 41532.71,
+      "distancia_total_km": 8831.2,
+      "costo_prom_km_mxn": 4.703
+    },
+    {
+      "metodo": "GA",
+      "valor_hora": 300,
+      "costo_total_mxn": 55387.1,
+      "distancia_total_km": 9420.5,
+      "costo_prom_km_mxn": 5.879
+    },
+    {
+      "metodo": "ACO",
+      "valor_hora": 300,
+      "costo_total_mxn": 53169.46,
+      "distancia_total_km": 9043.3,
+      "costo_prom_km_mxn": 5.879
+    }
+  ],
+  "recomendacion": {
+    "metodo": "ACO",
+    "valor_hora": 200,
+    "costo_total_mxn": 41532.71,
+    "distancia_total_km": 8831.2,
+    "ruta_indices": [
+      31,
+      9,
+      14,
+      7,
+      13,
+      16,
+      0,
+      30,
+      8,
+      23,
+      2,
+      24,
+      1,
+      5,
+      6,
+      17,
+      26,
+      22,
+      10,
+      20,
+      12,
+      27,
+      19,
+      28,
+      21,
+      29,
+      3,
+      25,
+      4,
+      18,
+      11,
+      15
+    ],
+    "ruta_ciudades": [
+      "Ciudad de Mexico",
+      "Toluca",
+      "Morelia",
+      "Colima",
+      "Guadalajara",
+      "Tepic",
+      "Aguascalientes",
+      "Zacatecas",
+      "Durango",
+      "Culiacan",
+      "La Paz",
+      "Hermosillo",
+      "Mexicali",
+      "Chihuahua",
+      "Saltillo",
+      "Monterrey",
+      "Ciudad Victoria",
+      "San Luis Potosi",
+      "Guanajuato",
+      "Queretaro",
+      "Pachuca",
+      "Tlaxcala",
+      "Puebla",
+      "Xalapa",
+      "Chetumal",
+      "Merida",
+      "San Francisco de Campeche",
+      "Villahermosa",
+      "Tuxtla Gutierrez",
+      "Oaxaca",
+      "Chilpancingo",
+      "Cuernavaca"
+    ]
+  }
+}
