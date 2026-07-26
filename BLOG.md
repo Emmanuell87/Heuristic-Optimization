@@ -1,376 +1,618 @@
-<!--
-============================================================================
- BLOG FINAL (FUSIONADO) — LISTO PARA PEGAR EN NOTION
-============================================================================
- Fusiona la Parte 1 (redacción de Jean/equipo) + la Parte 2 completa + Uso de IA
- + aportes + bibliografía unificada. Los números de las figuras ya coinciden con
- los GIFs de la carpeta assets/.
-
- CÓMO USARLO:
- 1. Pega el contenido en Notion (bloque por bloque o todo).
- 2. Donde diga  [[ IMAGEN: assets/... ]]  sube ESE archivo como bloque de imagen
-    y debajo deja el pie de figura ya redactado.
- 3. Las ecuaciones van entre  $$ ... $$  → Notion las convierte a KaTeX.
-============================================================================
--->
-
-# Optimización Numérica y Combinatoria: Análisis Comparativo de Métodos Deterministas y Heurísticos
-
-**Curso:** Redes Neuronales y Algoritmos Bioinspirados
-**Docente:** Juan David Ospina Arango
-**Institución:** Universidad Nacional de Colombia, Sede Medellín — Facultad de Minas
-**Repositorio de código:** https://github.com/Emmanuell87/Heuristic-Optimization
-
-## Integrantes e información de coautoría
-
-- **Jean Carlos Perilla García** — Desarrollo y calibración de los algoritmos evolutivos y heurísticos continuos (GA, PSO, DE) de la Parte 1; redacción y diseño del reporte técnico.
-- **Emmanuel Alberto Mejía Arango** — Modelado matemático del problema combinatorio (TSP México), recolección de coordenadas geográficas de las 32 capitales y estructuración de la matriz de costos de la Parte 2; publicación del blog.
-- **Juan Camilo López Morales** — Implementación del descenso por gradiente de la Parte 1, codificación de la colonia de hormigas (ACO) para el TSP y generación de los scripts de exportación de animaciones (.gif).
+# Modelación de Riesgo de Crédito con Red Neuronal Calibrada y Score Derivado
 
 ---
 
-# PARTE 1: Optimización Numérica
+**Jean Carlos Perilla Garcia  -** mailto:emmejiaa@unal.edu.co
 
-## 1. Introducción y selección de funciones de prueba
+**Emmanuel Alberto Mejia Arango -** mailto:emmejiaa@unal.edu.co
 
-En el diseño de sistemas de ingeniería y la modelación matemática, la optimización de funciones continuas representa un desafío fundamental. La topología y el paisaje de búsqueda (*search landscape*) de un problema determinan directamente el éxito o fracaso de un algoritmo. Mientras que los espacios convexos y suaves facilitan el trabajo de los métodos tradicionales, las superficies rugosas y multimodales exigen estrategias de exploración global (Jamil & Yang, 2013).
-
-Para evaluar la robustez, límites y eficiencia de los enfoques deterministas frente a los metaheurísticos, se seleccionaron dos funciones de prueba (*benchmarks*) que representan dos mundos geométricos opuestos: la función de Rosenbrock y la función de Rastrigin.
-
-### 1.1 Función de Rosenbrock (el valle no convexo)
-
-La función de Rosenbrock, propuesta por Rosenbrock (1960) y conocida como *función del valle banana*, es una superficie no convexa ampliamente usada para evaluar algoritmos de optimización continua. Su formulación general para $n$ dimensiones es la **Ecuación 1**:
-
-$$
-f(x)=\sum_{i=1}^{n-1}[100(x_{i+1}-x_{i}^{2})^{2}+(1-x_{i})^{2}] \quad \textbf{(Ecuación 1)}
-$$
-
-Presenta un único mínimo global en $x^*=(1,1,\dots,1)$, donde $f(x^*)=0$.
-
-**Geometría y dificultad.** Su complicación no radica en múltiples mínimos locales, sino en su topología: un valle estrecho, curvo, asimétrico y alargado. Al ingresar al valle, los métodos basados en gradiente reducen drásticamente la magnitud de sus pasos; como las paredes son empinadas y el fondo casi plano, sufren oscilaciones y convergencia lenta, muy sensibles a la tasa de aprendizaje (Nocedal & Wright, 2006).
-
-**Justificación.** Es ideal para evaluar la explotación local y el ajuste de paso: mide cómo un método navega valles mal condicionados siguiendo trayectorias no lineales sin perder estabilidad.
-
-### 1.2 Función de Rastrigin (la trampa multimodal)
-
-La función de Rastrigin (Rastrigin, 1974; Mühlenbein et al., 1991) es altamente multimodal. Su formulación en $n$ dimensiones es la **Ecuación 2**:
-
-$$
-f(x)=10n+\sum_{i=1}^{n}[x_{i}^{2}-10\cos(2\pi x_{i})] \quad \textbf{(Ecuación 2)}
-$$
-
-Su mínimo global está en el origen $x^*=(0,0,\dots,0)$ con $f(x^*)=0$.
-
-**Geometría y dificultad.** Combina una parábola global con un término cosenoidal periódico, generando una superficie rugosa densamente poblada de mínimos locales. Todo algoritmo que dependa de información local es atraído al mínimo local más cercano, sufriendo convergencia prematura.
-
-**Justificación.** Pone a prueba la exploración global de las metaheurísticas: mide la robustez para sobrevolar crestas oscilatorias y evitar el estancamiento local.
-
-## 2. Optimización tradicional: descenso por gradiente
-
-### 2.1 Fundamento teórico
-
-El descenso por gradiente es un algoritmo determinista de primer orden para hallar mínimos locales de funciones continuas y diferenciables. Calcula iterativamente el gradiente en la posición actual y se desplaza en la dirección opuesta (máximo descenso local). La regla de actualización es la **Ecuación 3**:
-
-$$
-x^{(k+1)}=x^{(k)}-\eta\nabla f(x^{(k)}) \quad \textbf{(Ecuación 3)}
-$$
-
-donde $x^{(k)}$ es el vector de variables en la iteración $k$, $\eta\in\mathbb{R}^+$ es la tasa de aprendizaje y $\nabla f(x^{(k)})$ el gradiente. El proceso se repite hasta alcanzar el máximo de iteraciones, una norma del gradiente menor que una tolerancia ($\lVert\nabla f(x)\rVert<\text{tol}$), o un cambio mínimo en la función (Nocedal & Wright, 2006).
-
-### 2.2 Gradientes analíticos en 2D y 3D
-
-Para direcciones de descenso exactas se dedujeron las derivadas parciales de cada función.
-
-**Rosenbrock, gradiente 2D** con $f(x,y)=100(y-x^2)^2+(1-x)^2$ (**Ecuación 4**):
-
-$$
-\nabla f(x,y)=\begin{bmatrix} -400x(y-x^{2})-2(1-x) \\ 200(y-x^{2}) \end{bmatrix} \quad \textbf{(Ecuación 4)}
-$$
-
-**Rosenbrock, gradiente 3D** (acoplamiento en cadena de variables) (**Ecuación 5**):
-
-$$
-\nabla f(x,y,z)=\begin{bmatrix} -400x(y-x^{2})-2(1-x) \\ 200(y-x^{2})-400y(z-y^{2})-2(1-y) \\ 200(z-y^{2}) \end{bmatrix} \quad \textbf{(Ecuación 5)}
-$$
-
-**Rastrigin, derivada por componente** (**Ecuación 6**):
-
-$$
-\frac{\partial f}{\partial x_{i}}=2x_{i}+20\pi\sin(2\pi x_{i}) \quad \textbf{(Ecuación 6)}
-$$
-
-de donde los gradientes 2D y 3D son las **Ecuaciones 7 y 8**:
-
-$$
-\nabla f(x,y)=\begin{bmatrix} 2x+20\pi\sin(2\pi x) \\ 2y+20\pi\sin(2\pi y) \end{bmatrix} \quad \textbf{(Ecuación 7)}
-$$
-
-$$
-\nabla f(x,y,z)=\begin{bmatrix} 2x+20\pi\sin(2\pi x) \\ 2y+20\pi\sin(2\pi y) \\ 2z+20\pi\sin(2\pi z) \end{bmatrix} \quad \textbf{(Ecuación 8)}
-$$
-
-### 2.3 Visualización dinámica de las trayectorias (2D)
-
-> *Las animaciones se exportaron con el módulo `PillowWriter` de Matplotlib y se guardaron en el repositorio para garantizar su renderizado dinámico en el blog.*
-
-#### 2.3.1 Descenso por gradiente en Rosenbrock (2D)
-
-Espacio de búsqueda $x,y\in[-2.048,\,2.048]$, con condición inicial aleatoria.
-
-> [[ IMAGEN: assets/parte1/dg_rosenbrock.gif ]]
-> **Figura 1.** Evolución iterativa del descenso por gradiente navegando el valle de Rosenbrock.
-
-**Análisis métrico.** El algoritmo recorrió el valle y tras agotar sus **1000 iteraciones** terminó en $x\approx[0.889,\,0.790]$, con un valor final $f(x)\approx 0.0123$. Se acercó mucho al óptimo $(1,1)$ pero **no alcanzó el cero exacto**: el punto desciende rápido por las laderas empinadas y luego avanza con lentitud por el fondo curvo y casi plano del valle, confirmando el comportamiento teórico esperado.
-
-#### 2.3.2 Descenso por gradiente en Rastrigin (2D)
-
-Dominio $x,y\in[-5.12,\,5.12]$.
-
-> [[ IMAGEN: assets/parte1/dg_rastrigin.gif ]]
-> **Figura 2.** Descenso por gradiente en el paisaje rugoso de Rastrigin: el algoritmo queda atrapado.
-
-**Análisis métrico.** En esta superficie multimodal el algoritmo se detuvo de forma **prematura tras solo 12 iteraciones** (norma del gradiente por debajo de la tolerancia), quedando confinado en el mínimo local $x\approx[3.98,\,-2.98]$ con $f(x)\approx 24.87$, muy lejos del óptimo global en el origen. Esta es una corrida individual representativa; el promedio de 30 corridas (Tabla 1) es $18.97\pm10.08$, y este resultado cae dentro de esa dispersión, evidenciando que el desempeño depende del azar de la semilla inicial.
-
-## 3. Optimización metaheurística: enfoque bioinspirado y poblacional
-
-### 3.1 Justificación del enfoque global
-
-A diferencia de las técnicas deterministas, las metaheurísticas no dependen de la información local del gradiente: operan sobre una **población** de soluciones distribuidas en el dominio. Al incorporar operadores estocásticos y mecanismos de comunicación interna, equilibran la exploración global con la explotación de las mejores regiones (Eiben & Smith, 2015), lo que las hace idóneas para topologías no convexas (Rosenbrock) o paisajes rugosos (Rastrigin).
-
-### 3.2 Algoritmos evaluados
-
-**Algoritmo Genético (GA).** Inspirado en la selección natural (Holland, 1975; Goldberg, 1989). Población de 50 individuos, 200 generaciones, selección por torneo ($k=3$), cruce por orden (OX), mutación por intercambio ($P_{\text{mut}}=0.25$) y elitismo (5 mejores). Buena exploración global, pero con dificultad para la sintonía fina decimal cerca del óptimo continuo.
-
-**Enjambre de Partículas (PSO).** Basado en el comportamiento social de bandadas (Kennedy & Eberhart, 1995). Cada partícula ajusta su velocidad según su memoria y la del enjambre; la posición se actualiza según la **Ecuación 9**:
-
-$$
-x_{i}^{(k+1)}=x_{i}^{(k)}+v_{i}^{(k+1)} \quad \textbf{(Ecuación 9)}
-$$
-
-Enjambre de 40 partículas, 150 iteraciones. Convergencia acelerada y estable; sobrevuela las crestas de Rastrigin sin quedar atrapado.
-
-**Evolución Diferencial (DE).** Metaheurística poblacional (Storn & Price, 1997) que genera vectores mutantes combinando diferencias de individuos, según la **Ecuación 10**:
-
-$$
-v_{i}^{(k+1)}=x_{r_1}^{(k)}+F\cdot(x_{r_2}^{(k)}-x_{r_3}^{(k)}) \quad \textbf{(Ecuación 10)}
-$$
-
-con $r_1,r_2,r_3$ índices aleatorios distintos y $F\in[0,2]$ el factor de escala. Estrategia `best1bin` (SciPy), `popsize=15`. El algoritmo más preciso y eficiente del estudio.
-
-### 3.3 Visualización dinámica de las poblaciones (2D)
-
-#### 3.3.1 PSO en Rosenbrock (2D)
-
-> [[ IMAGEN: assets/parte1/pso_rosenbrock.gif ]]
-> **Figura 3.** Movimiento del enjambre (PSO) en Rosenbrock. Las partículas de las paredes de alta energía descienden y guían al grupo por el pasillo curvo hacia el mínimo; la mejor partícula alcanzó $f\approx 2.7\times10^{-5}$ en $x\approx[0.997,\,0.993]$.
-
-#### 3.3.2 PSO en Rastrigin (2D)
-
-> [[ IMAGEN: assets/parte1/pso_rastrigin.gif ]]
-> **Figura 4.** Dinámica exploratoria del enjambre (PSO) en Rastrigin. A diferencia de la Figura 2, el enjambre sobrevuela los mínimos locales y concentra la búsqueda en el centro del dominio, alcanzando $f\approx 1.3\times10^{-5}$ en $x\approx[0,\,0]$.
-
-#### 3.3.3 Superficies 3D
-
-> [[ IMAGEN: assets/parte1/dg_rosenbrock_3d.png ]]  ·  [[ IMAGEN: assets/parte1/pso_rastrigin_3d.png ]]
-> **Figura 5.** Vistas 3D de la superficie objetivo con la trayectoria proyectada: descenso por gradiente sobre Rosenbrock (izq.) y enjambre PSO sobre Rastrigin (der.).
-
-## 4. Discusión comparativa y análisis estadístico
-
-Dado el componente estocástico de los algoritmos, una sola ejecución carece de validez. Se ejecutaron **30 corridas independientes** por método sobre las funciones en 2D; los resultados se consolidan en la **Tabla 1**.
-
-**Tabla 1.** Análisis estadístico comparativo de desempeño (30 ejecuciones independientes).
-
-| Función / Algoritmo | Descenso por Gradiente (DG) | Algoritmo Genético (GA) | Enjambre de Partículas (PSO) | Evolución Diferencial (DE) |
-|---|---|---|---|---|
-| **Rosenbrock** (valor final) | $0.9921 \pm 0.4120$ | $0.0712 \pm 0.0150$ | **0.000000 ± 0.0** | **0.000000 ± 0.0** |
-| Evaluaciones promedio | 1 000 *(límite)* | 10 001 | 6 040 | **3 990** |
-| **Rastrigin** (valor final) | $18.9741 \pm 10.0810$ | $0.6921 \pm 0.1240$ | **0.000000 ± 0.0** | **0.000000 ± 0.0** |
-| Evaluaciones promedio | **27.9** | 10 001 | 6 040 | **1 987** |
-
-*Nota: en negrita el mejor desempeño por métrica. Las evaluaciones heurísticas incluyen el costo acumulado de la población.*
-
-**Descenso por gradiente.** Altísima eficiencia local (27.9 evaluaciones en Rastrigin), pero ese bajo número no es éxito sino **falla por convergencia prematura**: queda atrapado en mínimos locales con valor medio deficiente ($18.97$) y desviación enorme ($\pm10.08$). En Rosenbrock agota sus 1000 iteraciones rebotando en el valle sin sintonía fina.
-
-**Metaheurísticas.** Justifican el mayor número de evaluaciones al evadir trampas locales. **GA** se aproxima al óptimo pero con precisión decimal limitada ($0.07$ y $0.69$). **PSO** converge al cero con estabilidad absoluta ($\pm0.0$) a costo constante (6 040 evaluaciones). **DE** es la técnica superior: alcanza el óptimo perfecto con el menor costo (**3 990** en Rosenbrock, **1 987** en Rastrigin) gracias a su parada dinámica. Un mayor número de evaluaciones no es desperdicio, sino el costo justificado para garantizar convergencia global en entornos no convexos y multimodales.
+Juan Camilo López Morales - **mailto:jlopezmor@unal.edu.co**
 
 ---
 
-# PARTE 2: Optimización Combinatoria (TSP México)
+**Link de pagina web del modelo**
 
-## 5. Planteamiento
+[https://neuroscore-vdbvsqvefvuev3mu2em8ma.streamlit.app/](https://neuroscore-vdbvsqvefvuev3mu2em8ma.streamlit.app/) 
 
-Un vendedor debe recorrer las **32 capitales estatales de México** y regresar al origen minimizando el costo total de desplazamiento. Es una instancia del problema del vendedor viajero (TSP), NP-difícil, para el cual las metaheurísticas son la vía práctica en instancias medianas y grandes (Lawler et al., 1985; Reinelt, 1994). Se resuelve con **Algoritmo Genético (GA)** y **Colonia de Hormigas (ACO)**.
-
-## 6. Datos y construcción de la matriz de costos
-
-> **Premisas, fuentes y procedimiento** (atendiendo la observación del docente).
-
-### 6.1 Coordenadas y distancias
-
-Se construyeron 32 nodos con las coordenadas geográficas (lat, lon) de cada capital, tomadas de registros públicos de geolocalización (INEGI). La distancia entre ciudades se aproximó con la **fórmula de Haversine** (Sinnott, 1984), distancia de círculo máximo sobre la esfera terrestre (**Ecuación 11**):
-
-$$
-d_{ij}=2R\,\arcsin\sqrt{\sin^{2}\!\left(\tfrac{\Delta\phi}{2}\right)+\cos\phi_i\cos\phi_j\sin^{2}\!\left(\tfrac{\Delta\lambda}{2}\right)} \quad \textbf{(Ecuación 11)}
-$$
-
-con $R=6371$ km. Es adecuada sin una API de rutas por carretera, aunque **subestima** las distancias reales (limitación discutida en la Sección 9).
-
-### 6.2 Modelo de costo por tramo
-
-El costo de ir de $i$ a $j$ suma tres componentes (**Ecuación 12**):
-
-$$
-C_{ij}=C^{\text{comb}}_{ij}+C^{\text{peaje}}_{ij}+C^{\text{tiempo}}_{ij} \quad \textbf{(Ecuación 12)}
-$$
-
-$$
-C^{\text{comb}}_{ij}=d_{ij}\frac{P_{\text{gas}}}{R_{\text{veh}}},\qquad
-C^{\text{peaje}}_{ij}=d_{ij}\,f_{\text{peaje}},\qquad
-C^{\text{tiempo}}_{ij}=d_{ij}\frac{V_h}{v} \quad \textbf{(Ecuación 13)}
-$$
-
-El costo total de una ruta $\pi$ incluye el retorno al origen (**Ecuación 14**):
-
-$$
-C_{\text{total}}(\pi)=\sum_{k=1}^{n-1}C_{\pi_k\pi_{k+1}}+C_{\pi_n\pi_1} \quad \textbf{(Ecuación 14)}
-$$
-
-### 6.3 Parámetros: valores, fuentes y justificación
-
-**Vehículo del vendedor:** **Nissan Versa 1.6**, sedán compacto muy común en México, con rendimiento en carretera $R_{\text{veh}}\approx16$ km/L (CONUEE *ecovehículos* / fabricante).
-
-**Tabla 2.** Premisas del modelo de costos y su fuente.
-
-| Parámetro | Símbolo | Valor | Fuente / justificación |
-|---|---|---|---|
-| Precio gasolina Magna | $P_{\text{gas}}$ | 24.0 MXN/L | Promedio nacional 2025 — Comisión Reguladora de Energía (CRE) / Pemex |
-| Rendimiento del vehículo | $R_{\text{veh}}$ | 16.0 km/L | Nissan Versa 1.6 en carretera (CONUEE / fabricante) |
-| Factor de peaje | $f_{\text{peaje}}$ | 0.85 MXN/km | Costo medio de la red de autopistas de cuota (CAPUFE / SICT) |
-| Velocidad promedio | $v$ | 85 km/h | Velocidad media realista en carretera federal (SICT) |
-| Valor de la hora | $V_h$ | 100 / 200 / 300 MXN/h | Variable de decisión; anclada al salario mínimo (CONASAMI, 2025). Caso base: 200 |
-
-**Sobre $V_h$.** El salario mínimo general 2025 es ≈ 278.80 MXN/día (CONASAMI, 2025); un vendedor calificado con vehículo tiene un valor por hora superior. Al haber incertidumbre, se trató como **variable de decisión** con un **análisis de sensibilidad** en $\{100,200,300\}$ MXN/h; se adoptó $V_h=200$ como caso base.
-
-**Costo por kilómetro (caso base $V_h=200$)** (**Ecuación 15**):
-
-$$
-c_{\text{km}}=\underbrace{\tfrac{24}{16}}_{1.50}+\underbrace{0.85}_{\text{peaje}}+\underbrace{\tfrac{200}{85}}_{2.35}=4.70\ \text{MXN/km} \quad \textbf{(Ecuación 15)}
-$$
-
-## 7. Algoritmos implementados
-
-- **Algoritmo Genético (GA):** población de permutaciones, selección por torneo, cruce por orden (OX) y mutación por intercambio con elitismo (Goldberg, 1989; Larrañaga et al., 1999).
-- **Colonia de Hormigas (ACO):** construcción probabilística de rutas guiada por feromona $\tau$ y visibilidad $\eta=1/C_{ij}$, con evaporación y depósito proporcional a la calidad (Dorigo & Stützle, 2004). La probabilidad de transición es la **Ecuación 16**:
-
-$$
-p_{ij}=\frac{\tau_{ij}^{\alpha}\,\eta_{ij}^{\beta}}{\sum_{l\in\mathcal{N}}\tau_{il}^{\alpha}\,\eta_{il}^{\beta}} \quad \textbf{(Ecuación 16)}
-$$
-
-## 8. Resultados
-
-### 8.1 Desempeño GA vs ACO y análisis de sensibilidad
-
-**Tabla 3.** Costo total y distancia de la mejor ruta por método y valor de la hora.
-
-| Método | $V_h$ (MXN/h) | Costo total (MXN) | Distancia (km) | Costo/km (MXN) |
-|---|---|---|---|---|
-| ACO | 100 | **32 357** | 9 176 | 3.53 |
-| GA  | 100 | 34 693 | 9 838 | 3.53 |
-| ACO | 200 | **41 533** | 8 831 | 4.70 |
-| GA  | 200 | 50 602 | 10 760 | 4.70 |
-| ACO | 300 | **53 169** | 9 043 | 5.88 |
-| GA  | 300 | 55 387 | 9 421 | 5.88 |
-
-**ACO supera a GA en los tres escenarios.** Un hallazgo relevante: el **costo/km es idéntico para ambos métodos en cada $V_h$** porque $c_{\text{km}}$ es constante, de modo que $C_{\text{total}}=c_{\text{km}}\cdot D_{\text{total}}$. Por tanto **minimizar costo equivale a minimizar distancia**, y el valor de la hora **escala** el costo total sin alterar el orden óptimo de visita (se retoma como limitación en la Sección 9).
-
-### 8.2 Convergencia
-
-> [[ IMAGEN: assets/parte2/convergencia_ga_vs_aco.png ]]
-> **Figura 6.** Evolución del mejor costo acumulado por iteración (caso base $V_h=200$). ACO reduce el costo más rápido y estabiliza en un valor menor que GA, coherente con su mejor explotación de la feromona.
-
-### 8.3 Visualización geográfica animada
-
-> [[ IMAGEN: assets/parte2/ga_ruta_mexico.gif ]]
-> **Figura 7.** Evolución de la mejor ruta del **Algoritmo Genético** a lo largo de las generaciones (caso base). La ruta pasa de un trazado enredado a uno ordenado, terminando en ≈ 50 602 MXN.
-
-> [[ IMAGEN: assets/parte2/aco_ruta_mexico.gif ]]
-> **Figura 8.** Evolución de la mejor ruta de la **Colonia de Hormigas** (caso base). ACO alcanza una ruta más limpia y de menor costo (≈ 41 533 MXN) que GA.
-
-> [[ IMAGEN: assets/parte2/ruta_recomendada.png ]]
-> **Figura 9.** Ruta recomendada al vendedor (ACO, $V_h=200$), iniciando y terminando en Ciudad de México.
-
-### 8.4 Ruta recomendada al vendedor y justificación
-
-**Se recomienda la ruta obtenida por ACO** (caso base $V_h=200$ MXN/h), con **costo ≈ 41 533 MXN** y **≈ 8 831 km**, por tres razones:
-
-1. **Menor costo y distancia:** es la ruta de menor distancia hallada (8 831 km) y, al ser el costo proporcional a la distancia, también la de menor costo operativo.
-2. **Robustez del método:** ACO superó a GA en los tres valores de la hora (Tabla 3) y convergió de forma más estable (Figura 6).
-3. **Coherencia geográfica:** agrupa regiones (Bajío, occidente, noroeste, noreste, sureste y sur) minimizando cruces (Figura 9).
-
-**Orden de visita recomendado** (ciclo; el punto de inicio es intercambiable):
-
-> Ciudad de México → Toluca → Morelia → Colima → Guadalajara → Tepic → Aguascalientes → Zacatecas → Durango → Culiacán → La Paz → Hermosillo → Mexicali → Chihuahua → Saltillo → Monterrey → Ciudad Victoria → San Luis Potosí → Guanajuato → Querétaro → Pachuca → Tlaxcala → Puebla → Xalapa → Chetumal → Mérida → San Francisco de Campeche → Villahermosa → Tuxtla Gutiérrez → Oaxaca → Chilpancingo → Cuernavaca → (regreso a Ciudad de México)
-
-## 9. Discusión y limitaciones
-
-- **GA y ACO** son apropiados para el TSP por su búsqueda global en espacios combinatorios grandes (Dorigo & Stützle, 2004).
-- **Distancia Haversine:** simplifica el modelado, pero subestima distancias reales por carretera. Ejemplo: el tramo Culiacán–La Paz cruza el Golfo de California en línea recta, cuando por carretera La Paz solo se conecta vía Baja California; una API vial (OSRM, Google Directions) corregiría estos casos.
-- **Modelo de costo lineal:** al ser $c_{\text{km}}$ constante, el valor de la hora no cambia la ruta óptima. Incorporar **peajes reales por tramo** (tarifas CAPUFE por caseta) rompería la proporcionalidad y haría que $V_h$ sí modifique la ruta.
-- **Trabajo futuro:** integrar distancias y peajes reales por carretera y comparar con soluciones exactas o de referencia (LKH) para medir la brecha de optimalidad.
-
-## 10. Conclusiones
-
-1. Los métodos heurísticos superaron al descenso por gradiente ante la multimodalidad, alcanzando el óptimo global donde el gradiente quedó atrapado.
-2. En la Parte 1, **DE** ofreció el mejor balance precisión/eficiencia, seguido de PSO; GA exploró bien pero con menor precisión final.
-3. En la Parte 2, **ACO** dominó a GA en costo y estabilidad; se recomienda su ruta.
-4. Las animaciones permitieron validar experimentalmente el comportamiento teórico de cada algoritmo.
+Nota: En el link se encuentra un apartado al lado derecho de la pagina web donde se encuentra el link del repositorio de Github del proyecto y video promocional junto los reportes sustentados individualmente.  
 
 ---
 
-## 11. Uso de IA (obligatorio)
+## **Resumen**
 
-Se emplearon asistentes de IA como apoyo de productividad. Prompts principales:
+En este trabajo se desarrolla un modelo supervisado para estimar la probabilidad de incumplimiento crediticio (Probability of Default, PD) utilizando el *Credit Risk Dataset*. Se implementa una red neuronal artificial optimizada mediante búsqueda de hiperparámetros, la cual es comparada con un modelo base de regresión logística.
 
-1. *"Implementa en Python el descenso por gradiente para Rosenbrock y Rastrigin en 2D y 3D, devolviendo el punto óptimo y el historial de posiciones para animar."*
-2. *"Optimiza las mismas funciones con GA, PSO y evolución diferencial usando librerías científicas y registrando el número de evaluaciones."*
-3. *"Genera funciones con Matplotlib para animar la trayectoria en contornos 2D y mostrar la superficie 3D con la trayectoria."*
-4. *"Modela un TSP con costo compuesto por combustible, peajes y tiempo, y resuélvelo con GA y ACO para 32 ciudades; anima la mejor ruta sobre el mapa."*
-5. *"Redacta la estructura del reporte técnico con metodología, discusión y bibliografía en APA."*
+El modelo final alcanza un AUC de **0.7143**, mostrando una mejora moderada frente al baseline (**0.702**). A partir de la probabilidad estimada, se construye un score crediticio basado en log-odds, el cual permite ordenar individuos según su nivel de riesgo.
 
-**Impacto.** La IA aceleró la estructuración del código, la depuración, el diseño experimental y la redacción. Sin embargo, el equipo **validó y ajustó** parámetros, detectó y corrigió comportamientos (p. ej., la inestabilidad del gradiente y el artefacto de la distancia Haversine), interpretó los resultados y tomó todas las decisiones metodológicas. La IA funcionó como asistente, no como autor de las conclusiones.
+Finalmente, se desarrolla una aplicación web que permite estimar el riesgo individual y compararlo con la población.
 
 ---
 
-## 12. Referencias (APA, 7.ª edición)
+# **1. Definición del problema**
 
-Comisión Nacional de los Salarios Mínimos (CONASAMI). (2025). *Tabla de salarios mínimos generales y profesionales*. Gobierno de México.
+El presente trabajo aborda el problema de estimación de la probabilidad de incumplimiento crediticio (Probability of Default, PD) a partir de variables observables al momento de originación de un crédito.
 
-Dorigo, M., & Stützle, T. (2004). *Ant colony optimization*. MIT Press.
+Formalmente, se busca estimar la función:
 
-Eiben, A. E., & Smith, J. E. (2015). *Introduction to evolutionary computing* (2nd ed.). Springer.
+$$
+(1)\quad P(Y = 1 \mid X)
+$$
 
-Goldberg, D. E. (1989). *Genetic algorithms in search, optimization, and machine learning*. Addison-Wesley.
+donde:
+• $Y = 1$ indica que el cliente incurre en incumplimiento de sus obligaciones financieras,
+• $Y = 0$ indica cumplimiento completo del crédito,
+• $X$ corresponde al vector de características del cliente y del crédito disponibles al momento de la originación.
 
-Holland, J. H. (1975). *Adaptation in natural and artificial systems*. University of Michigan Press.
+Este problema se enmarca dentro de los modelos de riesgo de crédito utilizados en la industria financiera, donde la estimación de la PD constituye un insumo fundamental para múltiples procesos, incluyendo:
 
-Jamil, M., & Yang, X.-S. (2013). A literature survey of benchmark functions for global optimisation problems. *International Journal of Mathematical Modelling and Numerical Optimisation, 4*(2), 150–194.
+- evaluación y aprobación de créditos,
+- asignación de tasas de interés basadas en riesgo,
+- cálculo de pérdidas esperadas (Expected Loss),
+- gestión de portafolios y capital regulatorio.
 
-Kennedy, J., & Eberhart, R. (1995). Particle swarm optimization. En *Proceedings of the IEEE International Conference on Neural Networks* (pp. 1942–1948). IEEE.
+A diferencia de problemas de clasificación tradicionales, en este contexto no es suficiente obtener una alta precisión en la clasificación. Es igualmente crítico que las probabilidades estimadas sean coherentes y calibradas, ya que estas se utilizan directamente en la toma de decisiones económicas.
 
-Larrañaga, P., Kuijpers, C. M. H., Murga, R. H., Inza, I., & Dizdarevic, S. (1999). Genetic algorithms for the travelling salesman problem: A review of representations and operators. *Artificial Intelligence Review, 13*(2), 129–170.
+Desde una perspectiva ingenieril, el problema presenta varios desafíos:
 
-Lawler, E. L., Lenstra, J. K., Rinnooy Kan, A. H. G., & Shmoys, D. B. (Eds.). (1985). *The traveling salesman problem: A guided tour of combinatorial optimization*. Wiley.
+- presencia de desbalance de clases,
+- ruido en la variable objetivo debido a estados intermedios,
+- heterogeneidad en las variables explicativas,
+- posibles relaciones no lineales entre variables y el incumplimiento.
 
-Mühlenbein, H., Schomisch, M., & Born, J. (1991). The parallel genetic algorithm as function optimizer. *Parallel Computing, 17*(6–7), 619–632.
+El objetivo del modelo, por tanto, no es únicamente clasificar correctamente, sino construir una representación probabilística útil, robusta y operativamente interpretable.
 
-Nocedal, J., & Wright, S. J. (2006). *Numerical optimization* (2nd ed.). Springer.
+---
 
-Rastrigin, L. A. (1974). *Systems of extremal control*. Nauka.
+# **2. Construcción de la variable objetivo**
 
-Reinelt, G. (1994). *The traveling salesman: Computational solutions for TSP applications*. Springer.
+La calidad de la variable objetivo constituye uno de los factores más críticos en el desempeño de modelos de riesgo de crédito. En este trabajo, la variable objetivo se construyó a partir de la variable original `loan_status`, aplicando criterios de negocio orientados a capturar el comportamiento final del cliente.
 
-Rosenbrock, H. H. (1960). An automatic method for finding the greatest or least value of a function. *The Computer Journal, 3*(3), 175–184.
+Se definieron tres categorías:
 
-Sinnott, R. W. (1984). Virtues of the Haversine. *Sky and Telescope, 68*(2), 159.
+### **Clientes cumplidos (Y = 0)**
 
-Storn, R., & Price, K. (1997). Differential evolution — A simple and efficient heuristic for global optimization over continuous spaces. *Journal of Global Optimization, 11*(4), 341–359.
+Incluyen aquellos casos en los que el crédito fue completamente pagado, lo cual constituye evidencia definitiva de buen comportamiento.
+
+### **Clientes incumplidos (Y = 1)**
+
+Incluyen:
+
+- créditos en estado de default,
+- créditos clasificados como “charged off”,
+- créditos con atrasos prolongados (31–120 días).
+
+Estas categorías representan distintos grados de deterioro crediticio, pero todos son considerados eventos de incumplimiento desde la perspectiva del riesgo.
+
+### **Casos excluidos**
+
+Se eliminaron del análisis aquellos registros en los cuales no existe claridad sobre el desenlace final del crédito, tales como:
+
+- créditos en estado “Current”,
+- créditos en periodo de gracia,
+- créditos recién emitidos.
+
+### **Justificación técnica**
+
+La exclusión de estos registros responde a una consideración fundamental: el modelo debe aprender a partir de etiquetas confiables. Incluir observaciones con desenlace incierto introduciría ruido en el proceso de aprendizaje, deteriorando la capacidad predictiva del modelo.
+
+Esta decisión implica una reducción en el tamaño del dataset, pero mejora la calidad de la señal, lo cual es preferible en problemas de modelación de riesgo.
+
+Desde una perspectiva crítica, esta simplificación asume que los estados excluidos no contienen información útil, lo cual no es completamente cierto. En un entorno productivo, sería deseable modelar explícitamente el comportamiento temporal de los créditos o incorporar técnicas de supervivencia.
+
+---
+
+# **3. Análisis exploratorio de datos**
+
+El análisis exploratorio se llevó a cabo con el objetivo de comprender la estructura del dataset, identificar patrones relevantes y validar la plausibilidad de las variables seleccionadas.
+
+## **3.1 Distribución de la variable objetivo**
+
+Se observó un desbalance significativo entre clases, con una mayor proporción de clientes cumplidos respecto a incumplidos. Este comportamiento es consistente con datos reales de crédito, donde la tasa de default suele ser relativamente baja.
+
+Este desbalance tiene implicaciones directas en el modelamiento:
+
+- un modelo no ajustado tendería a favorecer la clase mayoritaria,
+- métricas como accuracy pueden resultar engañosas,
+- es necesario incorporar técnicas de compensación (por ejemplo, ponderación de clases).
+
+---
+
+## **3.2 Análisis de variables numéricas**
+
+Se analizaron variables clave relacionadas con la capacidad de pago y condiciones del crédito.
+
+### **Relación deuda-ingreso (DTI)**
+
+Los clientes incumplidos presentan valores sistemáticamente más altos de DTI, lo que sugiere una mayor carga financiera relativa y menor capacidad de absorción de shocks económicos.
+
+### **Tasa de interés (`int_rate`)**
+
+Se observa una correlación positiva entre la tasa de interés y el incumplimiento. Este comportamiento puede interpretarse de dos formas:
+
+- las entidades asignan mayores tasas a clientes percibidos como riesgosos,
+- tasas más altas incrementan la probabilidad de incumplimiento.
+
+En la práctica, ambos efectos pueden coexistir, lo que introduce complejidad en la interpretación.
+
+### **Ingreso (`annual_inc`)**
+
+Los clientes incumplidos tienden a concentrarse en rangos de menor ingreso, lo cual es consistente con la teoría económica del riesgo crediticio.
+
+---
+
+## **3.3 Variables categóricas**
+
+Las variables categóricas también muestran señal predictiva relevante:
+
+### **Grade y Sub-grade**
+
+Estas variables presentan una fuerte relación con el incumplimiento. No obstante, es importante notar que estas categorías son generadas por modelos previos, por lo que encapsulan información crediticia ya procesada.
+
+Esto implica un riesgo potencial de **leakage indirecto**, ya que el modelo podría estar reutilizando información derivada de procesos anteriores.
+
+### **Purpose**
+
+Se observan diferencias en la tasa de incumplimiento según el propósito del crédito, lo cual sugiere que el destino del financiamiento influye en el riesgo.
+
+---
+
+## **3.4 Conclusión del análisis exploratorio**
+
+El análisis confirma que:
+
+- el dataset contiene señal predictiva relevante,
+- las variables capturan dimensiones clave del riesgo (capacidad de pago y condiciones del crédito),
+- existen relaciones no lineales y dependencias complejas.
+
+Estos hallazgos justifican el uso de modelos no lineales, como redes neuronales, aunque también sugieren que modelos más simples podrían capturar parte importante de la señal.
+
+---
+
+# **4. Metodología**
+
+## **4.1 Preprocesamiento**
+
+Se diseñó un pipeline de preprocesamiento orientado a garantizar la consistencia y calidad de los datos de entrada.
+
+Las principales etapas incluyen:
+
+- eliminación de variables con fuga de información,
+- eliminación de identificadores y variables irrelevantes,
+- imputación de valores faltantes,
+- codificación de variables categóricas,
+- escalado de variables numéricas.
+
+### **Consideración crítica**
+
+El uso de LabelEncoder para variables categóricas introduce una estructura ordinal artificial. Aunque esto simplifica el pipeline, puede distorsionar las relaciones reales entre categorías.
+
+En un entorno productivo, sería preferible utilizar:
+
+- one-hot encoding,
+- embeddings,
+- o técnicas supervisadas de agrupación de categorías.
+
+---
+
+## **4.2 División de datos**
+
+Se utilizó una partición en tres conjuntos:
+
+- entrenamiento (60%),
+- validación (20%),
+- prueba (20%).
+
+Se aplicó muestreo estratificado para preservar la proporción de clases.
+
+### **Limitación**
+
+La partición es aleatoria y no temporal. En problemas de riesgo de crédito, esto puede generar estimaciones optimistas del desempeño, ya que no se evalúa la estabilidad del modelo en el tiempo.
+
+---
+
+## **4.3 Modelo base**
+
+Se implementó un modelo de regresión logística como línea base.
+
+Este modelo tiene dos funciones principales:
+
+- servir como referencia de desempeño,
+- evaluar si la complejidad de la red neuronal está justificada.
+
+Dado que la regresión logística es el estándar en scorecards tradicionales, una mejora marginal por parte de la red neuronal podría no justificar su mayor complejidad.
+
+---
+
+## **4.4 Modelo de red neuronal**
+
+Se implementó una red neuronal multicapa con arquitectura optimizada mediante Keras Tuner.
+
+Se ajustaron:
+
+- número de capas,
+- número de neuronas,
+- regularización,
+- dropout,
+- tasa de aprendizaje.
+
+El criterio de selección fue el AUC en validación.
+
+---
+
+## **4.5 Manejo del desbalance**
+
+Se utilizó ponderación de clases para penalizar más los errores en la clase minoritaria.
+
+Esto permite mejorar la capacidad del modelo para detectar incumplimientos, evitando que el modelo favorezca excesivamente la clase mayoritaria.
+
+---
+
+## **4.6 Calibración de probabilidades**
+
+Se aplicó regresión isotónica para calibrar las probabilidades generadas por el modelo.
+
+Esta etapa es crítica, ya que:
+
+- un modelo puede tener buen AUC pero mala calibración,
+- la PD se utiliza directamente en decisiones de negocio.
+
+---
+
+# **5. Resultados experimentales**
+
+El modelo final obtuvo:
+
+**Tabla 1.** *Métricas de desempeño del modelo de red neuronal y modelo base*
+
+| Métrica | Valor |
+| --- | --- |
+| AUC (RNA) | 0.7143 |
+| AUC (Logística) | 0.702 |
+| Brier score | 0.1540 |
+| Threshold | 0.22 |
+| Recall (clase 1) | 0.6532 |
+| Precision (clase 1) | 0.3512 |
+| F1-score | 0.4568 |
+
+Nota. AUC: área bajo la curva ROC. Brier score: medida de la calidad de las probabilidades estimadas. El threshold corresponde al umbral de clasificación óptimo seleccionado mediante maximización del F1-score en el conjunto de validación.
+
+La Tabla 1 presenta las principales métricas de desempeño del modelo final y su comparación con el modelo base de regresión logística.
+
+Como se observa, la red neuronal alcanza un AUC de **0.7143**, superando al modelo logístico (**0.702**). Esta diferencia, aunque moderada, indica la capacidad del modelo no lineal para capturar relaciones adicionales entre las variables explicativas y el incumplimiento.
+
+El Brier score de **0.1540** sugiere una calidad probabilística adecuada, lo cual es particularmente relevante en aplicaciones de riesgo crediticio, donde las probabilidades estimadas son utilizadas directamente en la toma de decisiones.
+
+El umbral de clasificación seleccionado (**0.22**) refleja la necesidad de priorizar la detección de clientes incumplidos, lo cual se evidencia en un recall de **65.32%** para la clase de interés. No obstante, esta elección implica una reducción en la precisión (**35.12%**), lo que indica la presencia de falsos positivos.
+
+Este comportamiento es consistente con el contexto del problema, donde el costo asociado a no detectar un incumplimiento suele ser mayor que el de clasificar erróneamente a un cliente cumplido.
+
+---
+
+## **Interpretación técnica**
+
+El AUC obtenido indica una capacidad de discriminación moderada. Este resultado es consistente con problemas reales de riesgo de crédito, donde la separación entre clases es inherentemente limitada.
+
+El Brier score refleja una calidad probabilística aceptable, lo cual es relevante dado el uso del modelo en scoring.
+
+El alto recall indica que el modelo prioriza la detección de clientes riesgosos, lo cual es deseable en contextos donde el costo de falsos negativos es elevado.
+
+---
+
+# **6. Evaluación del modelo**
+
+## **Curva ROC**
+
+La curva ROC muestra que el modelo supera significativamente a un clasificador aleatorio, evidenciando que captura patrones relevantes en los datos.
+
+No obstante, la forma de la curva indica que existe solapamiento entre clases, lo cual limita el desempeño máximo alcanzable.
+
+**Figura 1.** *Muestra la curva ROC del modelo evaluado sobre el conjunto de prueba.*
+
+![Figure_1.png](Figure_1.png)
+
+Nota. La curva ROC representa la relación entre la tasa de verdaderos positivos (sensibilidad) y la tasa de falsos positivos para diferentes umbrales de clasificación. La línea discontinua corresponde a un clasificador aleatorio (AUC = 0.5).
+
+Como se observa en la Figura 1, el modelo de red neuronal presenta una capacidad de discriminación moderada, con una curva ROC claramente por encima de la línea de referencia aleatoria. El modelo alcanza un AUC de **0.7143**, lo que indica que tiene una probabilidad superior al azar de asignar un mayor puntaje a un cliente incumplido que a uno cumplido.
+
+La forma de la curva sugiere que el modelo captura patrones relevantes en los datos, especialmente en rangos bajos y medios de la tasa de falsos positivos. Sin embargo, la separación entre clases no es completa, lo cual se evidencia en la curvatura progresiva y el alejamiento de la esquina superior izquierda, indicando la presencia de solapamiento entre clientes cumplidos e incumplidos.
+
+Este comportamiento es consistente con problemas reales de riesgo de crédito, donde las características observables no permiten una separación perfecta entre clases debido a la naturaleza incierta y multifactorial del incumplimiento.
+
+En términos prácticos, el modelo ofrece una mejora significativa frente a un clasificador aleatorio, aunque su desempeño se encuentra limitado por la calidad y naturaleza de la información disponible.
+
+---
+
+**Figura 2.** *Insertar curva ROC comparativa RNA vs Logística*
+
+![comparativo.png](comparativo.png)
+
+Nota. La curva ROC muestra la relación entre la tasa de verdaderos positivos y la tasa de falsos positivos para distintos umbrales de clasificación. La línea discontinua representa un clasificador aleatorio. La red neuronal presenta un AUC ligeramente superior al modelo de regresión logística.
+
+Como se observa en la Figura 2, ambos modelos presentan una capacidad de discriminación moderada, con curvas ROC claramente por encima de la línea de referencia aleatoria. La red neuronal alcanza un AUC de **0.7143**, mientras que la regresión logística obtiene un AUC de **0.702**, evidenciando una mejora marginal del modelo no lineal.
+
+La cercanía entre ambas curvas sugiere que gran parte de la señal del problema puede ser capturada mediante un modelo lineal, mientras que la red neuronal logra explotar relaciones no lineales adicionales, aunque con ganancias limitadas en desempeño.
+
+Este comportamiento es consistente con problemas de riesgo crediticio, donde la separación entre clases suele ser parcial debido a la naturaleza ruidosa y compleja de los datos.
+
+En términos prácticos, ambos modelos son capaces de discriminar entre clientes cumplidos e incumplidos, pero la mejora observada en la red neuronal debe evaluarse en función del costo adicional en complejidad e interpretabilidad.
+
+---
+
+## **Trade-off de clasificación**
+
+El modelo presenta:
+
+- alto recall (65.32%)
+- baja precisión (35.12%)
+
+Esto es consistente con problemas de riesgo, donde es preferible minimizar falsos negativos.
+
+---
+
+## **Curva de calibración**
+
+**Figura 3.** *Curva de calibración del modelo de red neuronal*
+
+![curva de calibracion.png](curva_de_calibracion.png)
+
+Nota. La curva de calibración compara la probabilidad predicha por el modelo con la frecuencia real observada. La línea discontinua representa la calibración perfecta.
+
+La Figura 3 presenta la curva de calibración del modelo de red neuronal, la cual permite evaluar la calidad de las probabilidades estimadas en términos de su correspondencia con la frecuencia observada del evento de incumplimiento.
+
+Como se observa, la curva del modelo se encuentra cercana a la diagonal de referencia, lo que indica una adecuada calibración en la mayoría de los rangos de probabilidad. En particular, para valores intermedios de probabilidad, el modelo presenta una buena alineación con la frecuencia real, lo cual sugiere que las probabilidades generadas son confiables para su uso en aplicaciones de riesgo crediticio.
+
+No obstante, se observan ligeras desviaciones en los extremos superiores, donde el modelo tiende a subestimar o sobreestimar marginalmente la probabilidad real. Este comportamiento es común en modelos de clasificación y no compromete significativamente su utilidad práctica.
+
+En conjunto, estos resultados validan el uso de técnicas de calibración, como la regresión isotónica, para mejorar la calidad probabilística del modelo, más allá de su capacidad de discriminación.
+
+---
+
+# **7. Transformación de la PD a Score**
+
+El archivo `scorecard_resumen_deciles.csv` permitió evaluar la capacidad del score para ordenar el riesgo.
+
+Los resultados muestran una relación monotónica entre el score y la tasa de incumplimiento:
+
+- Los deciles con mayor score presentan tasas de incumplimiento cercanas al **3–5%**
+- Los deciles con menor score alcanzan tasas cercanas al **45–50%**
+
+La probabilidad de incumplimiento se transforma en un score crediticio mediante una transformación logarítmica basada en odds, ampliamente utilizada en modelos de scoring:
+
+$$
+(2)\quad Score = A + B \cdot \ln\left(\frac{1 - PD}{PD}\right)
+$$
+
+donde:
+• PD corresponde a la probabilidad de incumplimiento estimada por el modelo,
+
+• A y B son parámetros de escala definidos en función de un score base y un valor de *Points to Double the Odds* (PDO).
+
+Esta transformación presenta varias ventajas:
+
+- garantiza monotonicidad respecto al riesgo,
+- permite comparar individuos de manera directa,
+- facilita la interpretación operativa del modelo.
+
+### **Validación del score**
+
+El análisis por deciles muestra que:
+
+- los deciles con menor score presentan mayor tasa de incumplimiento,
+- el modelo logra ordenar correctamente el riesgo.
+
+### **Limitación**
+
+El score generado no es aditivo por variable, lo cual limita su interpretabilidad frente a scorecards tradicionales.
+
+---
+
+# **8. Análisis de variables relevantes**
+
+Para evaluar la contribución de cada variable al desempeño del modelo, se empleó una metodología de **importancia por permutación**, basada en la degradación del AUC al perturbar cada variable de forma independiente.
+
+Este enfoque permite cuantificar la relevancia de cada variable en términos de su impacto directo sobre la capacidad discriminatoria del modelo, evitando depender de la estructura interna de la red neuronal.
+
+## **Resultados principales**
+
+Las variables con mayor impacto en el modelo incluyen:
+
+- `sub_grade`
+- `term`
+- `annual_inc`
+- `funded_amnt_inv`
+- `installment`
+- `dti`
+- `int_rate`
+
+Estas variables pueden agruparse en dos dimensiones fundamentales del riesgo:
+
+### **1. Capacidad de pago del cliente**
+
+- ingreso (`annual_inc`)
+- relación deuda-ingreso (`dti`)
+
+Estas variables reflejan la solvencia financiera del cliente.
+
+### **2. Condiciones del crédito**
+
+- tasa de interés (`int_rate`)
+- plazo (`term`)
+- monto del crédito
+
+Estas variables capturan el nivel de exposición y la carga financiera asociada al crédito.
+
+---
+
+## **Consideraciones críticas**
+
+- La alta relevancia de `sub_grade` sugiere que esta variable encapsula información crediticia previamente procesada, lo que puede introducir dependencia de modelos previos.
+- La importancia por permutación mide contribución predictiva, no causalidad.
+- La codificación mediante LabelEncoder limita la interpretación de la dirección del efecto en variables categóricas.
+
+En un entorno productivo, sería recomendable complementar este análisis con técnicas como SHAP o análisis de sensibilidad más robustos.
+
+---
+
+# **9. Aplicación web**
+
+Se desarrolló una aplicación web interactiva utilizando Streamlit, con el objetivo de facilitar la interpretación y uso del modelo por parte de usuarios no técnicos.
+
+## **Funcionalidades principales**
+
+La aplicación permite:
+
+- ingresar características del cliente y del crédito,
+- estimar la probabilidad de incumplimiento (PD),
+- calcular el score crediticio correspondiente,
+- ubicar al usuario en la distribución poblacional del score,
+- visualizar su percentil relativo frente a otros individuos.
+
+Adicionalmente, se implementaron dos modos de interacción:
+
+### **Modo básico**
+
+El usuario ingresa un conjunto reducido de variables, mientras que el resto se imputa utilizando valores de referencia de la población.
+
+### **Modo avanzado**
+
+El usuario puede especificar la totalidad de variables utilizadas por el modelo.
+
+---
+
+## **Diseño e interpretación**
+
+El diseño de la aplicación prioriza:
+
+- simplicidad de uso,
+- interpretabilidad de resultados,
+- visualización intuitiva del riesgo.
+
+Se incluyen elementos como:
+
+- distribución del score poblacional,
+- ubicación del usuario en dicha distribución,
+- interpretación cualitativa del nivel de riesgo.
+
+---
+
+## **Limitaciones de la aplicación**
+
+- En el modo básico, la imputación de variables introduce incertidumbre en el resultado.
+- La aplicación no sustituye un proceso formal de evaluación crediticia.
+- El modelo no incorpora información temporal ni comportamiento histórico dinámico.
+
+Por lo tanto, los resultados deben interpretarse como una estimación orientativa.
+
+---
+
+# **10. Caso de uso**
+
+El modelo desarrollado puede ser aplicado en distintos contextos dentro del ecosistema financiero.
+
+## **1. Evaluación de solicitudes de crédito**
+
+Permite estimar la probabilidad de incumplimiento de un solicitante y apoyar decisiones de aprobación o rechazo.
+
+## **2. Segmentación de clientes**
+
+El score derivado facilita la clasificación de clientes en niveles de riesgo, lo cual puede utilizarse para:
+
+- definir políticas de crédito,
+- asignar límites,
+- diseñar estrategias comerciales.
+
+## **3. Pricing basado en riesgo**
+
+Las probabilidades estimadas pueden ser utilizadas para ajustar tasas de interés en función del riesgo esperado.
+
+## **4. Herramientas de autodiagnóstico**
+
+La aplicación web permite a usuarios estimar su perfil de riesgo, lo cual puede ser útil para educación financiera.
+
+---
+
+## **Consideración crítica**
+
+El modelo no incluye variables macroeconómicas ni comportamiento dinámico, por lo que su uso en producción requeriría integración con sistemas más complejos.
+
+---
+
+# **11. Aprendizajes**
+
+El desarrollo del modelo permitió identificar varios aspectos clave en la modelación de riesgo de crédito.
+
+## **1. Importancia del target**
+
+La calidad de la variable objetivo tiene un impacto determinante en el desempeño del modelo. La exclusión de casos ambiguos mejora la consistencia del aprendizaje.
+
+## **2. Riesgo de fuga de información**
+
+La inclusión de variables derivadas de procesos posteriores al crédito puede generar resultados artificialmente altos. El control del leakage es crítico.
+
+## **3. Limitaciones de modelos complejos**
+
+La red neuronal captura relaciones no lineales, pero la mejora frente a modelos lineales puede ser marginal.
+
+## **4. Necesidad de calibración**
+
+Un alto AUC no garantiza probabilidades confiables. La calibración mejora significativamente la utilidad del modelo.
+
+## **5. Interpretabilidad vs desempeño**
+
+Existe un trade-off entre modelos interpretables (regresión logística) y modelos más complejos (redes neuronales).
+
+---
+
+# **12. Limitaciones**
+
+A pesar de los resultados obtenidos, el modelo presenta varias limitaciones:
+
+## **1. Codificación de variables categóricas**
+
+El uso de LabelEncoder introduce relaciones ordinales artificiales.
+
+## **2. Validación no temporal**
+
+La evaluación no considera cambios en el tiempo ni estabilidad del modelo.
+
+## **3. Score no aditivo**
+
+El score derivado no permite descomposición por variable, lo que limita la interpretabilidad.
+
+## **4. Definición del umbral**
+
+El umbral de clasificación se basa en F1-score y no en criterios de negocio.
+
+## **5. Simplificación del problema**
+
+No se consideran variables macroeconómicas ni comportamiento dinámico.
+
+---
+
+# **13. Conclusiones**
+
+El modelo desarrollado permite estimar la probabilidad de incumplimiento con un nivel de desempeño consistente con la complejidad del problema.
+
+Los resultados muestran que:
+
+- el modelo tiene capacidad de discriminación moderada,
+- las probabilidades estimadas son razonablemente coherentes tras la calibración,
+- el score derivado permite ordenar el riesgo de manera efectiva.
+
+No obstante, la mejora frente a modelos lineales debe evaluarse cuidadosamente, ya que la complejidad adicional no siempre se traduce en beneficios significativos.
+
+Desde una perspectiva aplicada, el sistema desarrollado constituye una solución funcional para la estimación de riesgo, pero requiere mejoras adicionales para su uso en entornos productivos.
+
+---
+
+# **14. Referencias**
+
+- Bishop, C. (2006). *Pattern Recognition and Machine Learning*
+- Siddiqi, N. (2012). *Credit Risk Scorecards: Developing and Implementing Intelligent Credit Scoring*
+- Hand, D., & Henley, W. (1997). Statistical classification methods in consumer credit scoring
+- Kaggle Credit Risk Dataset
+- Fawcett, T. (2006). An introduction to ROC analysis.
+- Brier, G. (1950). Verification of forecasts expressed in terms of probability.
+- Niculescu-Mizil, A., & Caruana, R. (2005). Predicting Good Probabilities With Supervised Learning. ICML.
+
+---
