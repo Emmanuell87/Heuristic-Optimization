@@ -26,12 +26,12 @@ colonia de hormigas) sobre problemas de optimización numérica y combinatoria.
 ## 📝 Reporte técnico (blog)
 
 El reporte completo está publicado como entrada de blog (contenido fuente en
-[BLOG.md](BLOG.md)):
+[BLOG/Reporte_Técnico_de_Optimización_Numérica_y_Combina.md](Blog/Reporte_Técnico_de_Optimización_Numérica_y_Combina.md)):
 
-**➡️ [Enlace al blog en Notion](https://app.notion.com/p/Modelaci-n-de-Riesgo-de-Cr-dito-con-Red-Neuronal-Calibrada-y-Score-Derivado-349959feddc6809ba530c5abd1ba1801?source=copy_link)**
+**➡️ [Enlace al blog en Notion](https://app.notion.com/p/Reporte-T-cnico-de-Optimizaci-n-Num-rica-y-Combinatoria-39e959feddc680869fedd54a083b898d?source=copy_link)**
 
 El video de contribución individual está disponible en:
-**➡️ [Enlace al video](PENDIENTE-PEGAR-ENLACE)**
+**➡️ [Enlace al video](https://drive.google.com/file/d/1V6d8vGDEE92doS_9A4AMGjvxg_Kw6S6g/view?usp=drive_link)**
 
 ---
 
@@ -54,7 +54,7 @@ Heuristic-Optimization/
 ├── src/                                         # Scripts reproducibles de animaciones
 │   ├── generar_animaciones_parte1.py
 │   └── generar_animaciones_parte2.py
-├── Reporte técnico.pdf                          # Versión PDF (referencia)
+├── Reporte_Técnico_de_Optimización_Numérica_y_Combina.md            (Recomienda abrir el archivo en Notion)
 └── README.md
 ```
 
