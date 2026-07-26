@@ -54,7 +54,7 @@ Heuristic-Optimization/
 ├── src/                                         # Scripts reproducibles de animaciones
 │   ├── generar_animaciones_parte1.py
 │   └── generar_animaciones_parte2.py
-├── Reporte técnico.pdf                          # Versión PDF (referencia)
+├── Reporte_Técnico_de_Optimización_Numérica_y_Combina.md            (Recomienda abrir el archivo en Notion)
 └── README.md
 ```
 
