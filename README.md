@@ -31,7 +31,7 @@ El reporte completo está publicado como entrada de blog (contenido fuente en
 **➡️ [Enlace al blog en Notion](https://app.notion.com/p/Reporte-T-cnico-de-Optimizaci-n-Num-rica-y-Combinatoria-39e959feddc680869fedd54a083b898d?source=copy_link)**
 
 El video de contribución individual está disponible en:
-**➡️ [Enlace al video](PENDIENTE-PEGAR-ENLACE)**
+**➡️ [Enlace al video](https://drive.google.com/file/d/1V6d8vGDEE92doS_9A4AMGjvxg_Kw6S6g/view?usp=drive_link)**
 
 ---
 
