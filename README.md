@@ -26,7 +26,7 @@ colonia de hormigas) sobre problemas de optimización numérica y combinatoria.
 ## 📝 Reporte técnico (blog)
 
 El reporte completo está publicado como entrada de blog (contenido fuente en
-[BLOG.md](BLOG.md)):
+[BLOG/Reporte_Técnico_de_Optimización_Numérica_y_Combina.md](BLOG/Reporte_Técnico_de_Optimización_Numérica_y_Combina.md)):
 
 **➡️ [Enlace al blog en Notion](https://app.notion.com/p/Reporte-T-cnico-de-Optimizaci-n-Num-rica-y-Combinatoria-39e959feddc680869fedd54a083b898d?source=copy_link)**
 
