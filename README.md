@@ -28,7 +28,7 @@ colonia de hormigas) sobre problemas de optimización numérica y combinatoria.
 El reporte completo está publicado como entrada de blog (contenido fuente en
 [BLOG.md](BLOG.md)):
 
-**➡️ [Enlace al blog en Notion](PENDIENTE-PEGAR-ENLACE)**
+**➡️ [Enlace al blog en Notion](https://app.notion.com/p/Modelaci-n-de-Riesgo-de-Cr-dito-con-Red-Neuronal-Calibrada-y-Score-Derivado-349959feddc6809ba530c5abd1ba1801?source=copy_link)**
 
 El video de contribución individual está disponible en:
 **➡️ [Enlace al video](PENDIENTE-PEGAR-ENLACE)**
